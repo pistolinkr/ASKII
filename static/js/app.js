@@ -332,42 +332,257 @@ class ASCIIAI {
     }
 }
 
-// Global functions for HTML onclick events
-function convertImage() {
-    asciiAI.convertImage();
-}
+// Global variables
+let currentImage = null;
 
-function convertText() {
-    asciiAI.convertText();
-}
-
-function generatePattern() {
-    asciiAI.generatePattern();
-}
-
-function analyzeAscii() {
-    asciiAI.analyzeAscii();
-}
-
-// Initialize the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    window.asciiAI = new ASCIIAI();
-    
-    // Add some initial ASCII art to the page
-    const header = document.querySelector('.header');
-    const asciiLogo = document.createElement('div');
-    asciiLogo.className = 'ascii-logo';
-    asciiLogo.innerHTML = `
-        <pre style="font-size: 8px; color: rgba(0,255,136,0.3); margin-top: 20px;">
- █████  ███████ ██   ██ ██ ██████ 
-██   ██ ██      ██   ██ ██ ██   ██
-███████ ███████ ███████ ██ ██   ██
-██   ██      ██ ██   ██ ██ ██   ██
-██   ██ ███████ ██   ██ ██ ██████ 
-        </pre>
-    `;
-    header.appendChild(asciiLogo);
+// Initialize the application
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('ASCII AI Application Loaded');
+    setupEventListeners();
 });
+
+// Setup event listeners
+function setupEventListeners() {
+    // Image input change
+    const imageInput = document.getElementById('imageInput');
+    if (imageInput) {
+        imageInput.addEventListener('change', handleImageUpload);
+    }
+
+    // File label click
+    const fileLabel = document.querySelector('.file-label');
+    if (fileLabel) {
+        fileLabel.addEventListener('click', () => imageInput.click());
+    }
+}
+
+// Handle image upload
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        currentImage = e.target.result;
+        console.log('Image loaded successfully');
+    };
+    reader.readAsDataURL(file);
+}
+
+// Convert image to ASCII using OpenAI API
+async function convertImage() {
+    if (!currentImage) {
+        alert('이미지를 먼저 업로드해주세요.');
+        return;
+    }
+
+    const width = document.getElementById('width').value;
+    const style = document.getElementById('style').value;
+    const resultDiv = document.getElementById('imageResult');
+
+    // Show loading
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div class="loading"></div> 변환 중...';
+
+    try {
+        const response = await fetch('/api/convert-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                image: currentImage,
+                width: parseInt(width),
+                style: style
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            resultDiv.innerHTML = `<pre class="result">${data.ascii_art}</pre>`;
+        } else {
+            resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultDiv.innerHTML = '<div class="error">네트워크 오류가 발생했습니다.</div>';
+    }
+}
+
+// Generate ASCII art from text using OpenAI API
+async function convertText() {
+    const text = document.getElementById('textInput').value.trim();
+    if (!text) {
+        alert('텍스트를 입력해주세요.');
+        return;
+    }
+
+    const style = document.getElementById('textStyle').value;
+    const resultDiv = document.getElementById('textResult');
+
+    // Show loading
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div class="loading"></div> 생성 중...';
+
+    try {
+        const response = await fetch('/api/generate-text-art', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                text: text,
+                style: style
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            resultDiv.innerHTML = `<pre class="result">${data.ascii_art}</pre>`;
+        } else {
+            resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultDiv.innerHTML = '<div class="error">네트워크 오류가 발생했습니다.</div>';
+    }
+}
+
+// Generate ASCII pattern using OpenAI API
+async function generatePattern() {
+    const patternType = document.getElementById('patternType').value;
+    const size = document.getElementById('patternSize').value;
+    const resultDiv = document.getElementById('patternResult');
+
+    // Show loading
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div class="loading"></div> 패턴 생성 중...';
+
+    try {
+        const response = await fetch('/api/generate-pattern', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                patternType: patternType,
+                size: parseInt(size)
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            resultDiv.innerHTML = `<pre class="result">${data.pattern}</pre>`;
+        } else {
+            resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultDiv.innerHTML = '<div class="error">네트워크 오류가 발생했습니다.</div>';
+    }
+}
+
+// Analyze ASCII text using OpenAI API
+async function analyzeAscii() {
+    const asciiText = document.getElementById('analyzeInput').value.trim();
+    if (!asciiText) {
+        alert('분석할 ASCII 텍스트를 입력해주세요.');
+        return;
+    }
+
+    const resultDiv = document.getElementById('analysisResult');
+    const statsDiv = document.getElementById('analysisStats');
+
+    // Show loading
+    resultDiv.style.display = 'block';
+    statsDiv.style.display = 'block';
+    resultDiv.innerHTML = '<div class="loading"></div> 분석 중...';
+    statsDiv.innerHTML = '';
+
+    try {
+        const response = await fetch('/api/analyze-ascii', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                asciiText: asciiText
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            resultDiv.innerHTML = `<div class="result">${data.analysis}</div>`;
+            
+            // Display stats
+            const stats = data.stats;
+            statsDiv.innerHTML = `
+                <div class="stat">
+                    <div class="stat-value">${stats.total_characters}</div>
+                    <div class="stat-label">총 문자 수</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${stats.unique_characters}</div>
+                    <div class="stat-label">고유 문자</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${stats.lines}</div>
+                    <div class="stat-label">줄 수</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${stats.character_diversity}%</div>
+                    <div class="stat-label">문자 다양성</div>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
+            statsDiv.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        resultDiv.innerHTML = '<div class="error">네트워크 오류가 발생했습니다.</div>';
+        statsDiv.style.display = 'none';
+    }
+}
+
+// Utility functions
+function showMessage(message, type = 'info') {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
+    
+    document.body.appendChild(messageDiv);
+    
+    setTimeout(() => {
+        messageDiv.remove();
+    }, 3000);
+}
+
+// Copy to clipboard
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showMessage('클립보드에 복사되었습니다!', 'success');
+    }).catch(() => {
+        showMessage('복사에 실패했습니다.', 'error');
+    });
+}
+
+// Download ASCII art
+function downloadAscii(asciiText, filename = 'ascii-art.txt') {
+    const blob = new Blob([asciiText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
 
 // Add keyboard shortcuts
 document.addEventListener('keydown', (e) => {
