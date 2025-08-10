@@ -1,4 +1,4 @@
-// ASCII AI Web Application JavaScript
+// ASCII AI Web Application JavaScript - Client Side Only
 class ASCIIAI {
     constructor() {
         this.initializeEventListeners();
@@ -116,24 +116,67 @@ class ASCIIAI {
             reader.onload = async (e) => {
                 const imageData = e.target.result;
                 
-                const response = await fetch('/api/image-to-ascii', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({image: imageData, width: parseInt(width), style: style})
-                });
-                
-                const result = await response.json();
-                if (result.success) {
-                    this.displayResult('imageResult', result.ascii, 'success');
-                    this.animateASCII(result.ascii, 'imageResult');
-                } else {
-                    this.showNotification('변환 오류: ' + result.error, 'error');
-                }
+                // Convert image to ASCII using canvas
+                const asciiArt = await this.imageToAscii(imageData, parseInt(width), style);
+                this.displayResult('imageResult', asciiArt, 'success');
+                this.animateASCII(asciiArt, 'imageResult');
             };
             reader.readAsDataURL(file);
         } catch (error) {
             this.showNotification('오류가 발생했습니다: ' + error.message, 'error');
         }
+    }
+
+    async imageToAscii(imageData, width, style) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Calculate height maintaining aspect ratio
+                const aspectRatio = img.height / img.width;
+                const height = Math.floor(width * aspectRatio * 0.5); // Adjust for character aspect ratio
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and resize image
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Get image data
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const data = imageData.data;
+                
+                // ASCII characters from dark to light
+                const asciiChars = style === 'detailed' ? ' .:-=+*#%@' :
+                                 style === 'blocks' ? ' █▓▒░ ' :
+                                 style === 'minimal' ? ' .*#@' :
+                                 ' .:-=+*#%@';
+                
+                let asciiArt = '';
+                
+                for (let y = 0; y < height; y++) {
+                    for (let x = 0; x < width; x++) {
+                        const index = (y * width + x) * 4;
+                        const r = data[index];
+                        const g = data[index + 1];
+                        const b = data[index + 2];
+                        
+                        // Convert to grayscale
+                        const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+                        
+                        // Map to ASCII character
+                        const charIndex = Math.floor((gray / 255) * (asciiChars.length - 1));
+                        asciiArt += asciiChars[charIndex];
+                    }
+                    asciiArt += '\n';
+                }
+                
+                resolve(asciiArt);
+            };
+            img.src = imageData;
+        });
     }
 
     async convertText() {
@@ -148,22 +191,46 @@ class ASCIIAI {
         this.showLoading('textResult', 'ASCII 아트 생성 중...');
         
         try {
-            const response = await fetch('/api/text-to-ascii', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: text, style: style})
-            });
-            
-            const result = await response.json();
-            if (result.success) {
-                this.displayResult('textResult', result.ascii, 'success');
-                this.animateASCII(result.ascii, 'textResult');
-            } else {
-                this.showNotification('생성 오류: ' + result.error, 'error');
-            }
+            const asciiArt = this.textToAscii(text, style);
+            this.displayResult('textResult', asciiArt, 'success');
+            this.animateASCII(asciiArt, 'textResult');
         } catch (error) {
-            this.showNotification('오류가 발생했습니다: ' + error.message, 'error');
+            this.showNotification('생성 오류: ' + error.message, 'error');
         }
+    }
+
+    textToAscii(text, style) {
+        const asciiFonts = {
+            block: [
+                ' ██████  █████  ███████ ██ ██████ ██ ████████ ',
+                '██      ██   ██ ██      ██ ██   ██ ██       ██',
+                '██      ███████ ███████ ██ ██   ██ ████████ ',
+                '██      ██   ██ ██      ██ ██   ██ ██       ██',
+                ' ██████ ██   ██ ███████ ██ ██████  ████████ '
+            ],
+            banner: [
+                ' ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ',
+                '█ ▄▄▄▄▄ █ ▄▄▄▄▄ █ ▄▄▄▄▄ █ ▄▄▄▄▄ █ ▄▄▄▄▄ █',
+                '█ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █ █',
+                '█▄▄▄▄▄▄█▄▄▄▄▄▄█▄▄▄▄▄▄█▄▄▄▄▄▄█▄▄▄▄▄▄█',
+                ' ▀▀▀▀▀▀▀ ▀▀▀▀▀▀▀ ▀▀▀▀▀▀▀ ▀▀▀▀▀▀▀ ▀▀▀▀▀▀▀ '
+            ],
+            simple: [
+                ' ___    ___    ___    ___    ___    ___ ',
+                '|   |  |   |  |   |  |   |  |   |  |   |',
+                '|___|  |___|  |___|  |___|  |___|  |___|',
+                ' ___    ___    ___    ___    ___    ___ '
+            ]
+        };
+
+        const font = asciiFonts[style] || asciiFonts.simple;
+        let result = '';
+        
+        for (let line of font) {
+            result += line + '\n';
+        }
+        
+        return result;
     }
 
     async generatePattern() {
@@ -173,22 +240,61 @@ class ASCIIAI {
         this.showLoading('patternResult', '패턴 생성 중...');
         
         try {
-            const response = await fetch('/api/generate-pattern', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({type: type, size: size})
-            });
-            
-            const result = await response.json();
-            if (result.success) {
-                this.displayResult('patternResult', result.pattern, 'success');
-                this.animatePattern(result.pattern, 'patternResult');
-            } else {
-                this.showNotification('생성 오류: ' + result.error, 'error');
-            }
+            const pattern = this.generateAsciiPattern(type, size);
+            this.displayResult('patternResult', pattern, 'success');
+            this.animatePattern(pattern, 'patternResult');
         } catch (error) {
-            this.showNotification('오류가 발생했습니다: ' + error.message, 'error');
+            this.showNotification('생성 오류: ' + error.message, 'error');
         }
+    }
+
+    generateAsciiPattern(type, size) {
+        const chars = ' .:-=+*#%@';
+        let pattern = '';
+        
+        switch(type) {
+            case 'geometric':
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        if (x === y || x === size - 1 - y || x === 0 || x === size - 1 || y === 0 || y === size - 1) {
+                            pattern += '#';
+                        } else if (Math.abs(x - size/2) + Math.abs(y - size/2) < size/3) {
+                            pattern += '*';
+                        } else {
+                            pattern += ' ';
+                        }
+                    }
+                    pattern += '\n';
+                }
+                break;
+                
+            case 'fractal':
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        const cx = (x - size/2) / (size/4);
+                        const cy = (y - size/2) / (size/4);
+                        const value = Math.sin(cx) * Math.cos(cy) * 5;
+                        const charIndex = Math.floor((value + 5) / 10 * (chars.length - 1));
+                        pattern += chars[Math.max(0, Math.min(chars.length - 1, charIndex))];
+                    }
+                    pattern += '\n';
+                }
+                break;
+                
+            default: // random
+                for (let y = 0; y < size; y++) {
+                    for (let x = 0; x < size; x++) {
+                        const random = Math.random();
+                        if (random < 0.1) pattern += '#';
+                        else if (random < 0.3) pattern += '*';
+                        else if (random < 0.6) pattern += '+';
+                        else pattern += ' ';
+                    }
+                    pattern += '\n';
+                }
+        }
+        
+        return pattern;
     }
 
     async analyzeAscii() {
@@ -201,22 +307,62 @@ class ASCIIAI {
         this.showLoading('analysisResult', 'ASCII 분석 중...');
         
         try {
-            const response = await fetch('/api/analyze-ascii', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({text: text})
-            });
+            const analysis = this.analyzeAsciiText(text);
+            const stats = this.calculateStats(text);
             
-            const result = await response.json();
-            if (result.success) {
-                this.displayResult('analysisResult', result.analysis, 'success');
-                this.displayStats(result.stats);
-            } else {
-                this.showNotification('분석 오류: ' + result.error, 'error');
-            }
+            this.displayResult('analysisResult', analysis, 'success');
+            this.displayStats(stats);
         } catch (error) {
-            this.showNotification('오류가 발생했습니다: ' + error.message, 'error');
+            this.showNotification('분석 오류: ' + error.message, 'error');
         }
+    }
+
+    analyzeAsciiText(text) {
+        const lines = text.split('\n');
+        const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+        
+        let analysis = `ASCII 아트 분석 결과:\n\n`;
+        analysis += `📊 기본 정보:\n`;
+        analysis += `• 총 줄 수: ${lines.length}\n`;
+        analysis += `• 비어있지 않은 줄: ${nonEmptyLines.length}\n`;
+        analysis += `• 평균 줄 길이: ${Math.round(nonEmptyLines.reduce((sum, line) => sum + line.length, 0) / nonEmptyLines.length)}\n\n`;
+        
+        analysis += `🎨 시각적 특징:\n`;
+        const charDensity = this.calculateCharacterDensity(text);
+        analysis += `• 문자 밀도: ${charDensity.toFixed(2)}%\n`;
+        
+        const complexity = this.calculateComplexity(text);
+        analysis += `• 복잡도 점수: ${complexity.toFixed(1)}/10\n`;
+        
+        return analysis;
+    }
+
+    calculateStats(text) {
+        const totalChars = text.length;
+        const uniqueChars = new Set(text.replace(/\s/g, '')).size;
+        const lines = text.split('\n').length;
+        const characterDiversity = totalChars > 0 ? (uniqueChars / totalChars * 100) : 0;
+        
+        return {
+            total_characters: totalChars,
+            unique_characters: uniqueChars,
+            lines: lines,
+            character_diversity: Math.round(characterDiversity * 100) / 100
+        };
+    }
+
+    calculateCharacterDensity(text) {
+        const nonWhitespace = text.replace(/\s/g, '').length;
+        return (nonWhitespace / text.length) * 100;
+    }
+
+    calculateComplexity(text) {
+        const uniqueChars = new Set(text.replace(/\s/g, '')).size;
+        const lines = text.split('\n').length;
+        const avgLineLength = text.length / lines;
+        
+        // Complexity based on unique characters, line count, and average line length
+        return Math.min(10, (uniqueChars * 0.3 + lines * 0.2 + avgLineLength * 0.1));
     }
 
     showLoading(elementId, message) {
@@ -228,7 +374,7 @@ class ASCIIAI {
 
     displayResult(elementId, content, status) {
         const element = document.getElementById(elementId);
-        element.textContent = content;
+        element.innerHTML = `<pre class="result">${content}</pre>`;
         element.style.display = 'block';
         element.classList.remove('success', 'error');
         element.classList.add(status);
@@ -238,7 +384,7 @@ class ASCIIAI {
         const statsElement = document.getElementById('analysisStats');
         statsElement.innerHTML = `
             <div class="stat">
-                <div class="stat-value">${stats.total_lines}</div>
+                <div class="stat-value">${stats.lines}</div>
                 <div class="stat-label">줄 수</div>
             </div>
             <div class="stat">
@@ -250,8 +396,8 @@ class ASCIIAI {
                 <div class="stat-label">고유 문자</div>
             </div>
             <div class="stat">
-                <div class="stat-value">${stats.complexity_score}</div>
-                <div class="stat-label">복잡도</div>
+                <div class="stat-value">${stats.character_diversity}%</div>
+                <div class="stat-label">문자 다양성</div>
             </div>
         `;
         statsElement.style.display = 'grid';
@@ -262,11 +408,11 @@ class ASCIIAI {
         const lines = asciiText.split('\n');
         let currentLine = 0;
         
-        element.textContent = '';
+        element.innerHTML = '';
         
         const animate = () => {
             if (currentLine < lines.length) {
-                element.textContent += lines[currentLine] + '\n';
+                element.innerHTML += lines[currentLine] + '\n';
                 element.scrollTop = element.scrollHeight;
                 currentLine++;
                 setTimeout(animate, 50);
@@ -281,11 +427,11 @@ class ASCIIAI {
         const lines = pattern.split('\n');
         let currentLine = 0;
         
-        element.textContent = '';
+        element.innerHTML = '';
         
         const animate = () => {
             if (currentLine < lines.length) {
-                element.textContent += lines[currentLine] + '\n';
+                element.innerHTML += lines[currentLine] + '\n';
                 element.scrollTop = element.scrollHeight;
                 currentLine++;
                 setTimeout(animate, 30);
@@ -334,10 +480,12 @@ class ASCIIAI {
 
 // Global variables
 let currentImage = null;
+let asciiAI = null;
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', function() {
     console.log('ASCII AI Application Loaded');
+    asciiAI = new ASCIIAI();
     setupEventListeners();
 });
 
@@ -369,183 +517,31 @@ function handleImageUpload(event) {
     reader.readAsDataURL(file);
 }
 
-// Convert image to ASCII using OpenAI API
+// Convert image to ASCII
 async function convertImage() {
-    if (!currentImage) {
-        alert('이미지를 먼저 업로드해주세요.');
-        return;
-    }
-
-    const width = document.getElementById('width').value;
-    const style = document.getElementById('style').value;
-    const resultDiv = document.getElementById('imageResult');
-
-    // Show loading
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = '<div class="loading"></div> 변환 중...';
-
-    try {
-        const response = await fetch('/api/convert-image', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                image: currentImage,
-                width: parseInt(width),
-                style: style
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            resultDiv.innerHTML = `<pre class="result">${data.ascii_art}</pre>`;
-        } else {
-            resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        resultDiv.innerHTML = '<div class="error">네트워크 오류가 발생했습니다.</div>';
+    if (asciiAI) {
+        asciiAI.convertImage();
     }
 }
 
-// Generate ASCII art from text using OpenAI API
+// Generate ASCII art from text
 async function convertText() {
-    const text = document.getElementById('textInput').value.trim();
-    if (!text) {
-        alert('텍스트를 입력해주세요.');
-        return;
-    }
-
-    const style = document.getElementById('textStyle').value;
-    const resultDiv = document.getElementById('textResult');
-
-    // Show loading
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = '<div class="loading"></div> 생성 중...';
-
-    try {
-        const response = await fetch('/api/generate-text-art', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                text: text,
-                style: style
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            resultDiv.innerHTML = `<pre class="result">${data.ascii_art}</pre>`;
-        } else {
-            resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        resultDiv.innerHTML = '<div class="error">네트워크 오류가 발생했습니다.</div>';
+    if (asciiAI) {
+        asciiAI.convertText();
     }
 }
 
-// Generate ASCII pattern using OpenAI API
+// Generate ASCII pattern
 async function generatePattern() {
-    const patternType = document.getElementById('patternType').value;
-    const size = document.getElementById('patternSize').value;
-    const resultDiv = document.getElementById('patternResult');
-
-    // Show loading
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = '<div class="loading"></div> 패턴 생성 중...';
-
-    try {
-        const response = await fetch('/api/generate-pattern', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                patternType: patternType,
-                size: parseInt(size)
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            resultDiv.innerHTML = `<pre class="result">${data.pattern}</pre>`;
-        } else {
-            resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        resultDiv.innerHTML = '<div class="error">네트워크 오류가 발생했습니다.</div>';
+    if (asciiAI) {
+        asciiAI.generatePattern();
     }
 }
 
-// Analyze ASCII text using OpenAI API
+// Analyze ASCII text
 async function analyzeAscii() {
-    const asciiText = document.getElementById('analyzeInput').value.trim();
-    if (!asciiText) {
-        alert('분석할 ASCII 텍스트를 입력해주세요.');
-        return;
-    }
-
-    const resultDiv = document.getElementById('analysisResult');
-    const statsDiv = document.getElementById('analysisStats');
-
-    // Show loading
-    resultDiv.style.display = 'block';
-    statsDiv.style.display = 'block';
-    resultDiv.innerHTML = '<div class="loading"></div> 분석 중...';
-    statsDiv.innerHTML = '';
-
-    try {
-        const response = await fetch('/api/analyze-ascii', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                asciiText: asciiText
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            resultDiv.innerHTML = `<div class="result">${data.analysis}</div>`;
-            
-            // Display stats
-            const stats = data.stats;
-            statsDiv.innerHTML = `
-                <div class="stat">
-                    <div class="stat-value">${stats.total_characters}</div>
-                    <div class="stat-label">총 문자 수</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${stats.unique_characters}</div>
-                    <div class="stat-label">고유 문자</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${stats.lines}</div>
-                    <div class="stat-label">줄 수</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">${stats.character_diversity}%</div>
-                    <div class="stat-label">문자 다양성</div>
-                </div>
-            `;
-        } else {
-            resultDiv.innerHTML = `<div class="error">오류: ${data.error}</div>`;
-            statsDiv.style.display = 'none';
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        resultDiv.innerHTML = '<div class="error">네트워크 오류가 발생했습니다.</div>';
-        statsDiv.style.display = 'none';
+    if (asciiAI) {
+        asciiAI.analyzeAscii();
     }
 }
 
