@@ -38,6 +38,9 @@ class ASCIIAI {
             const fileLabel = document.querySelector('.file-label');
             fileLabel.textContent = file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name;
             
+            // Store the file for later use
+            this.currentFile = file;
+            
             // Preview image
             this.previewImage(file);
         }
@@ -100,8 +103,7 @@ class ASCIIAI {
     }
 
     async convertImage() {
-        const file = document.getElementById('imageInput').files[0];
-        if (!file) {
+        if (!this.currentFile) {
             this.showNotification('이미지 파일을 선택해주세요.', 'error');
             return;
         }
@@ -121,7 +123,7 @@ class ASCIIAI {
                 this.displayResult('imageResult', asciiArt, 'success');
                 this.animateASCII(asciiArt, 'imageResult');
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(this.currentFile);
         } catch (error) {
             this.showNotification('오류가 발생했습니다: ' + error.message, 'error');
         }
@@ -479,7 +481,6 @@ class ASCIIAI {
 }
 
 // Global variables
-let currentImage = null;
 let asciiAI = null;
 
 // Initialize the application
@@ -494,27 +495,23 @@ function setupEventListeners() {
     // Image input change
     const imageInput = document.getElementById('imageInput');
     if (imageInput) {
-        imageInput.addEventListener('change', handleImageUpload);
+        imageInput.addEventListener('change', (event) => {
+            if (asciiAI) {
+                asciiAI.handleFileSelect(event);
+            }
+        });
     }
 
     // File label click
     const fileLabel = document.querySelector('.file-label');
     if (fileLabel) {
-        fileLabel.addEventListener('click', () => imageInput.click());
+        fileLabel.addEventListener('click', () => {
+            const imageInput = document.getElementById('imageInput');
+            if (imageInput) {
+                imageInput.click();
+            }
+        });
     }
-}
-
-// Handle image upload
-function handleImageUpload(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        currentImage = e.target.result;
-        console.log('Image loaded successfully');
-    };
-    reader.readAsDataURL(file);
 }
 
 // Convert image to ASCII
