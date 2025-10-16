@@ -6,15 +6,9 @@ Web-based ASCII art generator and image converter
 
 from flask import Flask, render_template, request, jsonify
 import os
-from ascii_art import AsciiArtRenderer
-from ascii_3d import ASCII3DRenderer
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
-
-# Initialize converters
-renderer = AsciiArtRenderer()
-renderer_3d = ASCII3DRenderer()
 
 @app.route('/')
 def index():
@@ -23,29 +17,10 @@ def index():
 
 @app.route('/api/generate-art', methods=['POST'])
 def generate_art():
-    """Generate ASCII art"""
+    """Generate ASCII art (client-side processing)"""
     try:
-        data = request.json
-        art_type = data.get('type', 'banner')
-        text = data.get('text', 'ASCII ART')
-        size = data.get('size', 15)
-        
-        if art_type == 'banner':
-            result = renderer.text_banner(text)
-        elif art_type == 'wave':
-            result = renderer.wave(size)
-        elif art_type == 'circle':
-            result = renderer.circle(size)
-        elif art_type == 'spiral':
-            result = renderer.spiral(size)
-        elif art_type == 'heart':
-            result = renderer.heart(size)
-        elif art_type == 'box_text':
-            result = renderer.box_text(text, size * 2)
-        else:
-            result = "Unknown art type"
-        
-        return jsonify({'success': True, 'ascii': result})
+        # ASCII art generation is now handled entirely on the client side
+        return jsonify({'success': True, 'message': 'Client-side processing enabled'})
     
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
@@ -63,24 +38,10 @@ def convert_image():
 
 @app.route('/api/generate-3d', methods=['POST'])
 def generate_3d():
-    """Generate 3D ASCII object"""
+    """Generate 3D ASCII object (client-side processing)"""
     try:
-        data = request.json
-        obj_type = data.get('type', 'cube')
-        size = data.get('size', 10)
-        
-        if obj_type == 'cube':
-            result = renderer_3d.render_cube(size)
-        elif obj_type == 'sphere':
-            result = renderer_3d.render_sphere(size)
-        elif obj_type == 'pyramid':
-            result = renderer_3d.render_pyramid(size)
-        elif obj_type == 'torus':
-            result = renderer_3d.render_torus(size, size // 2)
-        else:
-            result = "Unknown object type"
-        
-        return jsonify({'success': True, 'ascii': result})
+        # 3D ASCII generation is now handled entirely on the client side
+        return jsonify({'success': True, 'message': 'Client-side processing enabled'})
     
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400

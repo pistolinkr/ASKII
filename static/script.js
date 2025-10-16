@@ -352,6 +352,120 @@ function setupResizeHandles() {
     });
 }
 
+// ASCII Art Generation Functions (Client-side)
+function generateTextBanner(text) {
+    const banner = `
+    ╔══════════════════════════════════════════════════════════════╗
+    ║                                                              ║
+    ║                    ${text.toUpperCase().padEnd(30)}                    ║
+    ║                                                              ║
+    ╚══════════════════════════════════════════════════════════════╝
+    `;
+    return banner;
+}
+
+function generateWave(size) {
+    let wave = '';
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        for (let x = 0; x < size * 2; x++) {
+            const amplitude = Math.sin((x / size) * Math.PI * 4) * (size / 2);
+            const distance = Math.abs(y - (size / 2) - amplitude);
+            if (distance < 2) {
+                line += '*';
+            } else {
+                line += ' ';
+            }
+        }
+        wave += line + '\n';
+    }
+    return wave;
+}
+
+function generateCircle(size) {
+    let circle = '';
+    const radius = size / 2;
+    const centerX = radius;
+    const centerY = radius;
+    
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        for (let x = 0; x < size; x++) {
+            const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+            if (Math.abs(distance - radius) < 1) {
+                line += '*';
+            } else {
+                line += ' ';
+            }
+        }
+        circle += line + '\n';
+    }
+    return circle;
+}
+
+function generateHeart(size) {
+    let heart = '';
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        for (let x = 0; x < size * 2; x++) {
+            const a = (x - size) / size * 2;
+            const b = (y - size * 0.7) / size * 2;
+            const equation = (a * a + b * b - 1) ** 3 - a * a * b * b * b;
+            if (equation < 0) {
+                line += '*';
+            } else {
+                line += ' ';
+            }
+        }
+        heart += line + '\n';
+    }
+    return heart;
+}
+
+function generateCube(size) {
+    let cube = '';
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        for (let x = 0; x < size * 2; x++) {
+            if ((x === 0 || x === size - 1 || x === size * 2 - 1) && 
+                (y === 0 || y === size - 1)) {
+                line += '+';
+            } else if (x === 0 || x === size - 1 || x === size * 2 - 1) {
+                line += '|';
+            } else if (y === 0 || y === size - 1) {
+                line += '-';
+            } else {
+                line += ' ';
+            }
+        }
+        cube += line + '\n';
+    }
+    return cube;
+}
+
+function generateSphere(size) {
+    let sphere = '';
+    const radius = size / 2;
+    const centerX = radius;
+    const centerY = radius;
+    
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        for (let x = 0; x < size; x++) {
+            const distance = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+            if (distance <= radius) {
+                const intensity = Math.floor((1 - distance / radius) * 4);
+                const chars = [' ', '.', ':', '*', '#'];
+                line += chars[Math.min(intensity, 4)];
+            } else {
+                line += ' ';
+            }
+        }
+        sphere += line + '\n';
+    }
+    return sphere;
+}
+
 // Initialize resize functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', setupResizeHandles);
 
