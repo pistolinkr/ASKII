@@ -6,12 +6,7 @@ Web-based ASCII art generator and image converter
 
 from flask import Flask, render_template, request, jsonify
 import os
-import base64
-from io import BytesIO
-from PIL import Image
-import numpy as np
 from ascii_art import AsciiArtRenderer
-from ascii_converter import AsciiConverter
 from ascii_3d import ASCII3DRenderer
 
 app = Flask(__name__)
@@ -19,7 +14,6 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 # Initialize converters
 renderer = AsciiArtRenderer()
-converter = AsciiConverter(width=100)
 renderer_3d = ASCII3DRenderer()
 
 @app.route('/')
@@ -58,34 +52,11 @@ def generate_art():
 
 @app.route('/api/convert-image', methods=['POST'])
 def convert_image():
-    """Convert image to ASCII"""
+    """Convert image to ASCII (client-side processing)"""
     try:
-        data = request.json
-        image_data = data.get('image')
-        width = data.get('width', 100)
-        detailed = data.get('detailed', False)
-        invert = data.get('invert', False)
-        
-        # Decode base64 image
-        if ',' in image_data:
-            image_data = image_data.split(',')[1]
-        
-        image_bytes = base64.b64decode(image_data)
-        image = Image.open(BytesIO(image_bytes))
-        
-        # Convert to grayscale
-        image = image.convert('L')
-        
-        # Resize with aspect ratio
-        aspect_ratio = image.height / image.width
-        new_height = int(width * aspect_ratio * 0.55)
-        image = image.resize((width, new_height))
-        
-        # Convert to ASCII
-        conv = AsciiConverter(width=width, detailed=detailed, invert=invert)
-        ascii_art = conv._pixels_to_ascii(np.array(image))
-        
-        return jsonify({'success': True, 'ascii': ascii_art})
+        # Image conversion is now handled entirely on the client side
+        # This endpoint is kept for compatibility but doesn't do server-side processing
+        return jsonify({'success': True, 'message': 'Client-side processing enabled'})
     
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
