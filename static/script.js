@@ -291,9 +291,30 @@ function toggleCamera() {
     }
 }
 
-// Resize functionality
+// Resize functionality with width synchronization
 function setupResizeHandles() {
     const container = document.querySelector('.camera-container');
+    const widthSlider = document.getElementById('cameraWidth');
+    const widthValue = document.getElementById('cameraWidthValue');
+    
+    // Convert container width to ASCII width (approximate)
+    function containerWidthToASCIIWidth(containerWidth) {
+        // ASCII characters are roughly 8-10px wide, so we estimate
+        const estimatedASCIIWidth = Math.floor(containerWidth / 8);
+        return Math.max(30, Math.min(200, estimatedASCIIWidth));
+    }
+    
+    // Convert ASCII width to container width
+    function asciiWidthToContainerWidth(asciiWidth) {
+        return Math.max(200, Math.min(1200, asciiWidth * 8));
+    }
+    
+    // Update width slider when container is resized
+    function updateWidthSlider() {
+        const asciiWidth = containerWidthToASCIIWidth(container.offsetWidth);
+        widthSlider.value = asciiWidth;
+        widthValue.textContent = asciiWidth;
+    }
     
     // Make container resizable
     container.addEventListener('mousedown', (e) => {
@@ -313,6 +334,9 @@ function setupResizeHandles() {
                 
                 container.style.width = Math.max(200, newWidth) + 'px';
                 container.style.height = Math.max(150, newHeight) + 'px';
+                
+                // Update width slider in real-time
+                updateWidthSlider();
             }
             
             function handleMouseUp() {
@@ -342,14 +366,27 @@ function setupResizeHandles() {
                 case 'ArrowLeft':
                     e.preventDefault();
                     container.style.width = Math.max(200, container.offsetWidth - step) + 'px';
+                    updateWidthSlider();
                     break;
                 case 'ArrowRight':
                     e.preventDefault();
                     container.style.width = (container.offsetWidth + step) + 'px';
+                    updateWidthSlider();
                     break;
             }
         }
     });
+    
+    // Sync width slider with container size
+    widthSlider.addEventListener('input', (e) => {
+        const asciiWidth = parseInt(e.target.value);
+        const containerWidth = asciiWidthToContainerWidth(asciiWidth);
+        container.style.width = containerWidth + 'px';
+        widthValue.textContent = asciiWidth;
+    });
+    
+    // Initial sync
+    updateWidthSlider();
 }
 
 // ASCII Art Generation Functions (Client-side)
