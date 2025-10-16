@@ -147,12 +147,15 @@ function startASCIILoop() {
     const updateASCII = () => {
         if (!isCameraRunning) return;
         
-        const width = parseInt(document.getElementById('cameraWidth').value);
+        // Calculate width from container size (approximate ASCII width)
+        const container = document.querySelector('.camera-container');
+        const containerWidth = container.offsetWidth;
+        const width = Math.max(30, Math.min(200, Math.floor(containerWidth / 8)));
         const detailed = document.getElementById('detailedCameraChars').checked;
         const invert = document.getElementById('invertCameraColors').checked;
         const mirror = document.getElementById('mirrorCamera').checked;
         const colorMode = document.getElementById('colorMode').value;
-        const autoAspectRatio = document.getElementById('customAspectRatio').checked;
+        const autoAspectRatio = true; // Always use auto aspect ratio
         
         // Set canvas size
         canvas.width = width;
