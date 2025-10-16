@@ -1,3 +1,15 @@
+// Theme detection and handling
+function updateTheme() {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+}
+
+// Listen for theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+
+// Initialize theme on load
+document.addEventListener('DOMContentLoaded', updateTheme);
+
 // Tab switching
 document.querySelectorAll('.tab-button').forEach(button => {
     button.addEventListener('click', () => {
