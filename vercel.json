@@ -2,8 +2,8 @@
   "version": 2,
   "builds": [
     {
-      "src": "wsgi.py",
-      "use": "@vercel/python"
+      "src": "public/**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -12,19 +12,9 @@
       "dest": "/static/$1"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "wsgi.py"
-    },
-    {
       "src": "/(.*)",
-      "dest": "wsgi.py"
+      "dest": "/public/index.html"
     }
-  ],
-  "functions": {
-    "wsgi.py": {
-      "maxDuration": 10,
-      "memory": 1024
-    }
-  }
+  ]
 }
 
