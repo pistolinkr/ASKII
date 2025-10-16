@@ -48,6 +48,24 @@ document.getElementById('cameraFPS').addEventListener('input', (e) => {
     document.getElementById('cameraFPSValue').textContent = e.target.value;
 });
 
+document.getElementById('cameraHeight').addEventListener('input', (e) => {
+    document.getElementById('cameraHeightValue').textContent = e.target.value;
+});
+
+// Auto aspect ratio toggle
+document.getElementById('customAspectRatio').addEventListener('change', (e) => {
+    const heightSlider = document.getElementById('cameraHeight');
+    const heightValue = document.getElementById('cameraHeightValue');
+    
+    if (e.target.checked) {
+        heightSlider.disabled = true;
+        heightValue.textContent = 'Auto';
+    } else {
+        heightSlider.disabled = false;
+        heightValue.textContent = heightSlider.value;
+    }
+});
+
 document.getElementById('imageWidth').addEventListener('input', (e) => {
     document.getElementById('imageWidthValue').textContent = e.target.value;
 });
@@ -134,10 +152,18 @@ function startASCIILoop() {
         const invert = document.getElementById('invertCameraColors').checked;
         const mirror = document.getElementById('mirrorCamera').checked;
         const colorMode = document.getElementById('colorMode').value;
+        const autoAspectRatio = document.getElementById('customAspectRatio').checked;
         
         // Set canvas size
         canvas.width = width;
-        canvas.height = Math.floor(width * video.videoHeight / video.videoWidth * 0.55);
+        
+        if (autoAspectRatio) {
+            // Auto aspect ratio (original behavior)
+            canvas.height = Math.floor(width * video.videoHeight / video.videoWidth * 0.55);
+        } else {
+            // Custom height
+            canvas.height = parseInt(document.getElementById('cameraHeight').value);
+        }
         
         // Draw video frame to canvas
         ctx.save();
@@ -154,7 +180,7 @@ function startASCIILoop() {
         
         // Get image data and convert to ASCII
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const ascii = convertImageDataToASCII(imageData, width, detailed, invert);
+        const ascii = convertImageDataToASCII(imageData, canvas.width, detailed, invert);
         
         display.textContent = ascii;
     };
@@ -264,6 +290,70 @@ function toggleCamera() {
         startCamera();
     }
 }
+
+// Resize functionality
+function setupResizeHandles() {
+    const container = document.querySelector('.camera-container');
+    
+    // Make container resizable
+    container.addEventListener('mousedown', (e) => {
+        if (e.target.classList.contains('resize-handle') || 
+            (e.target === container && e.offsetX > container.offsetWidth - 20 && e.offsetY > container.offsetHeight - 20)) {
+            
+            e.preventDefault();
+            
+            const startX = e.clientX;
+            const startY = e.clientY;
+            const startWidth = container.offsetWidth;
+            const startHeight = container.offsetHeight;
+            
+            function handleMouseMove(e) {
+                const newWidth = startWidth + (e.clientX - startX);
+                const newHeight = startHeight + (e.clientY - startY);
+                
+                container.style.width = Math.max(200, newWidth) + 'px';
+                container.style.height = Math.max(150, newHeight) + 'px';
+            }
+            
+            function handleMouseUp() {
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+            }
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+    });
+    
+    // Keyboard resize controls
+    container.addEventListener('keydown', (e) => {
+        if (container === document.activeElement) {
+            const step = e.shiftKey ? 10 : 1;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    container.style.height = Math.max(150, container.offsetHeight - step) + 'px';
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    container.style.height = (container.offsetHeight + step) + 'px';
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    container.style.width = Math.max(200, container.offsetWidth - step) + 'px';
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    container.style.width = (container.offsetWidth + step) + 'px';
+                    break;
+            }
+        }
+    });
+}
+
+// Initialize resize functionality when DOM is loaded
+document.addEventListener('DOMContentLoaded', setupResizeHandles);
 
 // Camera Event Listeners
 document.getElementById('toggleCameraBtn').addEventListener('click', toggleCamera);

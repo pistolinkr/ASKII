@@ -39,6 +39,11 @@
                     </div>
 
                     <div class="input-group">
+                        <label for="cameraHeight">Height: <span id="cameraHeightValue">Auto</span></label>
+                        <input type="range" id="cameraHeight" min="20" max="150" value="60" disabled>
+                    </div>
+
+                    <div class="input-group">
                         <label for="cameraFPS">FPS: <span id="cameraFPSValue">15</span></label>
                         <input type="range" id="cameraFPS" min="5" max="30" value="15">
                     </div>
@@ -68,6 +73,10 @@
                             <input type="checkbox" id="mirrorCamera">
                             <span>Mirror Camera</span>
                         </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="customAspectRatio" checked>
+                            <span>Auto Aspect Ratio</span>
+                        </label>
                     </div>
 
                     <button class="btn btn-primary" id="toggleCameraBtn">Start Camera</button>
@@ -75,10 +84,11 @@
                 </div>
 
                 <div class="display-panel">
-                    <div class="camera-container">
+                    <div class="camera-container" tabindex="0">
                         <video id="cameraVideo" autoplay muted playsinline style="display: none;"></video>
                         <canvas id="cameraCanvas" style="display: none;"></canvas>
                         <pre id="cameraDisplay" class="ascii-display">Click "Start Camera" to begin ASCII video stream</pre>
+                        <div class="resize-handle"></div>
                     </div>
                 </div>
             </div>

@@ -209,6 +209,66 @@ header h1 {
     height: 100%;
     overflow: hidden;
     border-radius: 8px;
+    resize: both;
+    min-width: 200px;
+    min-height: 150px;
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease;
+}
+
+.camera-container:hover {
+    border-color: var(--accent-blue);
+}
+
+.camera-container:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
+}
+
+/* Resize Handle */
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-blue);
+    border-radius: 8px 0 8px 0;
+    cursor: nw-resize;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.camera-container:hover .resize-handle,
+.camera-container:focus .resize-handle {
+    opacity: 0.7;
+}
+
+.resize-handle:hover {
+    opacity: 1 !important;
+}
+
+.resize-handle::after {
+    content: '';
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-bottom: 6px solid white;
+}
+
+/* Display Panel */
+.display-panel {
+    background: var(--ascii-bg);
+    border-radius: 16px;
+    padding: 24px;
+    overflow: auto;
+    box-shadow: 0 4px 16px var(--shadow);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
 }
 
 .control-panel h2 {
@@ -274,6 +334,16 @@ header h1 {
 .color-select:focus {
     outline: none;
     border-color: var(--accent-blue);
+}
+
+.color-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+input[type="range"]:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .input-group label {
