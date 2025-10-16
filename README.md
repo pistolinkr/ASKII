@@ -10,11 +10,19 @@ A comprehensive web-based ASCII art generation and conversion tool. Transform im
 
 ### 🎯 Web Interface
 
-**Generate Art**
-- Text banners with ASCII styling
-- Geometric patterns (waves, circles, spirals, hearts)
-- Box text with decorative borders
-- Real-time preview with adjustable size
+**ASCII Camera**
+- Real-time webcam feed converted to ASCII art
+- Live video stream with customizable settings
+- Frame capture functionality
+- Mirror mode for selfie-style viewing
+
+**ASCII Camera**
+- Real-time webcam to ASCII conversion
+- Adjustable resolution (30-120 characters wide)
+- Configurable FPS (5-30 frames per second)
+- Detailed/Simple character sets
+- Color inversion and mirror options
+- Frame capture and clipboard copy
 
 **Image to ASCII**
 - Upload and convert images instantly

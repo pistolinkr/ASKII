@@ -10,10 +10,20 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', upd
 // Initialize theme on load
 document.addEventListener('DOMContentLoaded', updateTheme);
 
+// Camera variables
+let cameraStream = null;
+let cameraInterval = null;
+let isCameraRunning = false;
+
 // Tab switching
 document.querySelectorAll('.tab-button').forEach(button => {
     button.addEventListener('click', () => {
         const tabName = button.dataset.tab;
+        
+        // Stop camera when switching tabs
+        if (isCameraRunning) {
+            stopCamera();
+        }
         
         // Update buttons
         document.querySelectorAll('.tab-button').forEach(btn => {
@@ -30,8 +40,12 @@ document.querySelectorAll('.tab-button').forEach(button => {
 });
 
 // Range slider value updates
-document.getElementById('artSize').addEventListener('input', (e) => {
-    document.getElementById('artSizeValue').textContent = e.target.value;
+document.getElementById('cameraWidth').addEventListener('input', (e) => {
+    document.getElementById('cameraWidthValue').textContent = e.target.value;
+});
+
+document.getElementById('cameraFPS').addEventListener('input', (e) => {
+    document.getElementById('cameraFPSValue').textContent = e.target.value;
 });
 
 document.getElementById('imageWidth').addEventListener('input', (e) => {
@@ -42,49 +56,148 @@ document.getElementById('objSize').addEventListener('input', (e) => {
     document.getElementById('objSizeValue').textContent = e.target.value;
 });
 
-// Generate Art
-document.getElementById('generateBtn').addEventListener('click', async () => {
-    const artType = document.querySelector('input[name="artType"]:checked').value;
-    const text = document.getElementById('artText').value;
-    const size = parseInt(document.getElementById('artSize').value);
-    
-    const button = document.getElementById('generateBtn');
-    const display = document.getElementById('artDisplay');
-    
-    button.classList.add('loading');
-    button.disabled = true;
-    
+// Camera Functions
+async function startCamera() {
     try {
-        const response = await fetch('/api/generate-art', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ type: artType, text: text, size: size })
+        const video = document.getElementById('cameraVideo');
+        const canvas = document.getElementById('cameraCanvas');
+        const display = document.getElementById('cameraDisplay');
+        const statusDot = document.querySelector('.status-dot');
+        const statusText = document.querySelector('.status-text');
+        
+        // Request camera access
+        cameraStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { 
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user' // Front camera
+            } 
         });
         
-        const data = await response.json();
+        video.srcObject = cameraStream;
+        video.play();
         
-        if (data.success) {
-            display.textContent = data.ascii;
-        } else {
-            display.textContent = `Error: ${data.error}`;
-        }
+        // Update UI
+        isCameraRunning = true;
+        statusDot.classList.add('active');
+        statusText.textContent = 'Camera On';
+        document.getElementById('startCameraBtn').disabled = true;
+        document.getElementById('stopCameraBtn').disabled = false;
+        document.getElementById('captureFrameBtn').disabled = false;
+        
+        // Start ASCII conversion loop
+        startASCIILoop();
+        
     } catch (error) {
-        display.textContent = `Error: ${error.message}`;
-    } finally {
-        button.classList.remove('loading');
-        button.disabled = false;
+        console.error('Error accessing camera:', error);
+        showNotification('Camera access denied or not available');
     }
-});
+}
 
-// Copy Generate Art
-document.getElementById('copyGenerateBtn').addEventListener('click', () => {
-    const text = document.getElementById('artDisplay').textContent;
+function stopCamera() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    
+    if (cameraInterval) {
+        clearInterval(cameraInterval);
+        cameraInterval = null;
+    }
+    
+    // Update UI
+    isCameraRunning = false;
+    document.querySelector('.status-dot').classList.remove('active');
+    document.querySelector('.status-text').textContent = 'Camera Off';
+    document.getElementById('startCameraBtn').disabled = false;
+    document.getElementById('stopCameraBtn').disabled = true;
+    document.getElementById('captureFrameBtn').disabled = true;
+    
+    // Hide video and canvas
+    document.getElementById('cameraVideo').style.display = 'none';
+    document.getElementById('cameraCanvas').style.display = 'none';
+}
+
+function startASCIILoop() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const display = document.getElementById('cameraDisplay');
+    const ctx = canvas.getContext('2d');
+    
+    const updateASCII = () => {
+        if (!isCameraRunning) return;
+        
+        const width = parseInt(document.getElementById('cameraWidth').value);
+        const detailed = document.getElementById('detailedCameraChars').checked;
+        const invert = document.getElementById('invertCameraColors').checked;
+        const mirror = document.getElementById('mirrorCamera').checked;
+        
+        // Set canvas size
+        canvas.width = width;
+        canvas.height = Math.floor(width * video.videoHeight / video.videoWidth * 0.55);
+        
+        // Draw video frame to canvas
+        ctx.save();
+        if (mirror) {
+            ctx.scale(-1, 1);
+            ctx.translate(-canvas.width, 0);
+        }
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        
+        // Get image data and convert to ASCII
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const ascii = convertImageDataToASCII(imageData, width, detailed, invert);
+        
+        display.textContent = ascii;
+    };
+    
+    const fps = parseInt(document.getElementById('cameraFPS').value);
+    cameraInterval = setInterval(updateASCII, 1000 / fps);
+}
+
+function convertImageDataToASCII(imageData, width, detailed, invert) {
+    const chars = detailed ? 
+        ['$', '@', 'B', '%', '8', '&', 'W', 'M', '#', '*', 'o', 'a', 'h', 'k', 'b', 'd', 'p', 'q', 'w', 'm', 'Z', 'O', '0', 'Q', 'L', 'C', 'J', 'U', 'Y', 'X', 'z', 'c', 'v', 'u', 'n', 'x', 'r', 'j', 'f', 't', '/', '\\', '|', '(', ')', '1', '{', '}', '[', ']', '?', '-', '_', '+', '~', '<', '>', 'i', '!', 'l', 'I', ';', ':', ',', '"', '^', '`', "'", '.', ' '] :
+        ['@', '#', 'S', '%', '?', '*', '+', ';', ':', ',', '.', ' '];
+    
+    const charSet = invert ? chars.reverse() : chars;
+    const data = imageData.data;
+    const asciiLines = [];
+    
+    for (let y = 0; y < imageData.height; y += 2) { // Skip every other row for better aspect ratio
+        let line = '';
+        for (let x = 0; x < imageData.width; x++) {
+            const index = (y * imageData.width + x) * 4;
+            const r = data[index];
+            const g = data[index + 1];
+            const b = data[index + 2];
+            
+            // Convert RGB to grayscale
+            const gray = Math.floor((r + g + b) / 3);
+            const charIndex = Math.floor((gray / 255) * (charSet.length - 1));
+            line += charSet[charIndex];
+        }
+        asciiLines.push(line);
+    }
+    
+    return asciiLines.join('\n');
+}
+
+function captureFrame() {
+    if (!isCameraRunning) return;
+    
+    const display = document.getElementById('cameraDisplay');
+    const text = display.textContent;
     navigator.clipboard.writeText(text).then(() => {
-        showNotification('Copied to clipboard!');
+        showNotification('Frame captured and copied to clipboard!');
     });
-});
+}
+
+// Camera Event Listeners
+document.getElementById('startCameraBtn').addEventListener('click', startCamera);
+document.getElementById('stopCameraBtn').addEventListener('click', stopCamera);
+document.getElementById('captureFrameBtn').addEventListener('click', captureFrame);
 
 // File upload
 let selectedImage = null;

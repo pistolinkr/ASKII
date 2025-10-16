@@ -15,60 +15,60 @@
         </header>
 
         <div class="tabs">
-            <button class="tab-button active" data-tab="generate">Generate Art</button>
+            <button class="tab-button active" data-tab="camera">ASCII Camera</button>
             <button class="tab-button" data-tab="image">Image to ASCII</button>
             <button class="tab-button" data-tab="3d">3D Objects</button>
         </div>
 
-        <!-- Generate Art Tab -->
-        <div class="tab-content active" id="generate-tab">
+        <!-- ASCII Camera Tab -->
+        <div class="tab-content active" id="camera-tab">
             <div class="panel-grid">
                 <div class="control-panel">
-                    <h2>Art Type</h2>
+                    <h2>Camera Settings</h2>
                     
-                    <div class="radio-group">
-                        <label class="radio-label">
-                            <input type="radio" name="artType" value="banner" checked>
-                            <span>Banner</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="artType" value="wave">
-                            <span>Wave</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="artType" value="circle">
-                            <span>Circle</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="artType" value="spiral">
-                            <span>Spiral</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="artType" value="heart">
-                            <span>Heart</span>
-                        </label>
-                        <label class="radio-label">
-                            <input type="radio" name="artType" value="box_text">
-                            <span>Box Text</span>
-                        </label>
+                    <div class="camera-status">
+                        <div class="status-indicator" id="cameraStatus">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Camera Off</span>
+                        </div>
                     </div>
 
                     <div class="input-group">
-                        <label for="artText">Text</label>
-                        <input type="text" id="artText" value="ASCII ART" placeholder="Enter text">
+                        <label for="cameraWidth">Width: <span id="cameraWidthValue">60</span></label>
+                        <input type="range" id="cameraWidth" min="30" max="120" value="60">
                     </div>
 
                     <div class="input-group">
-                        <label for="artSize">Size: <span id="artSizeValue">15</span></label>
-                        <input type="range" id="artSize" min="5" max="30" value="15">
+                        <label for="cameraFPS">FPS: <span id="cameraFPSValue">15</span></label>
+                        <input type="range" id="cameraFPS" min="5" max="30" value="15">
                     </div>
 
-                    <button class="btn btn-primary" id="generateBtn">Generate Art</button>
-                    <button class="btn btn-secondary" id="copyGenerateBtn">Copy to Clipboard</button>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="detailedCameraChars">
+                            <span>Detailed Characters</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="invertCameraColors">
+                            <span>Invert Colors</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="mirrorCamera">
+                            <span>Mirror Camera</span>
+                        </label>
+                    </div>
+
+                    <button class="btn btn-primary" id="startCameraBtn">Start Camera</button>
+                    <button class="btn btn-secondary" id="stopCameraBtn" disabled>Stop Camera</button>
+                    <button class="btn btn-secondary" id="captureFrameBtn" disabled>Capture Frame</button>
                 </div>
 
                 <div class="display-panel">
-                    <pre id="artDisplay" class="ascii-display">Select an art type and click Generate Art</pre>
+                    <div class="camera-container">
+                        <video id="cameraVideo" autoplay muted playsinline style="display: none;"></video>
+                        <canvas id="cameraCanvas" style="display: none;"></canvas>
+                        <pre id="cameraDisplay" class="ascii-display">Click "Start Camera" to begin ASCII video stream</pre>
+                    </div>
                 </div>
             </div>
         </div>
