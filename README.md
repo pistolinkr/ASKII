@@ -54,7 +54,7 @@ python3 app.py
 
 4. Open your browser and visit:
 ```
-http://localhost:5000
+http://localhost:5001
 ```
 
 ### CLI Usage
@@ -177,7 +177,7 @@ pip3 install -r requirements.txt
 python3 app.py
 ```
 
-The app will be available at `http://localhost:5000`
+The app will be available at `http://localhost:5001`
 
 ## 🤝 Contributing
 
