@@ -291,52 +291,85 @@ function toggleCamera() {
     }
 }
 
-// Resize functionality with width synchronization
+// Pure drag-based resize functionality
 function setupResizeHandles() {
     const container = document.querySelector('.camera-container');
-    const widthSlider = document.getElementById('cameraWidth');
-    const widthValue = document.getElementById('cameraWidthValue');
     
-    // Convert container width to ASCII width (approximate)
-    function containerWidthToASCIIWidth(containerWidth) {
-        // ASCII characters are roughly 8-10px wide, so we estimate
-        const estimatedASCIIWidth = Math.floor(containerWidth / 8);
-        return Math.max(30, Math.min(200, estimatedASCIIWidth));
-    }
-    
-    // Convert ASCII width to container width
-    function asciiWidthToContainerWidth(asciiWidth) {
-        return Math.max(200, Math.min(1200, asciiWidth * 8));
-    }
-    
-    // Update width slider when container is resized
-    function updateWidthSlider() {
-        const asciiWidth = containerWidthToASCIIWidth(container.offsetWidth);
-        widthSlider.value = asciiWidth;
-        widthValue.textContent = asciiWidth;
-    }
-    
-    // Make container resizable
+    // Make container resizable with all edge and corner handles
     container.addEventListener('mousedown', (e) => {
-        if (e.target.classList.contains('resize-handle') || 
-            (e.target === container && e.offsetX > container.offsetWidth - 20 && e.offsetY > container.offsetHeight - 20)) {
-            
+        if (e.target.classList.contains('resize-handle')) {
             e.preventDefault();
             
             const startX = e.clientX;
             const startY = e.clientY;
             const startWidth = container.offsetWidth;
             const startHeight = container.offsetHeight;
+            const startLeft = container.offsetLeft;
+            const startTop = container.offsetTop;
+            
+            const handle = e.target;
+            let resizeType = '';
+            
+            // Determine resize type based on handle class
+            if (handle.classList.contains('resize-top')) resizeType = 'top';
+            else if (handle.classList.contains('resize-right')) resizeType = 'right';
+            else if (handle.classList.contains('resize-bottom')) resizeType = 'bottom';
+            else if (handle.classList.contains('resize-left')) resizeType = 'left';
+            else if (handle.classList.contains('resize-top-left')) resizeType = 'top-left';
+            else if (handle.classList.contains('resize-top-right')) resizeType = 'top-right';
+            else if (handle.classList.contains('resize-bottom-left')) resizeType = 'bottom-left';
+            else if (handle.classList.contains('resize-bottom-right')) resizeType = 'bottom-right';
             
             function handleMouseMove(e) {
-                const newWidth = startWidth + (e.clientX - startX);
-                const newHeight = startHeight + (e.clientY - startY);
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
                 
-                container.style.width = Math.max(200, newWidth) + 'px';
-                container.style.height = Math.max(150, newHeight) + 'px';
+                let newWidth = startWidth;
+                let newHeight = startHeight;
+                let newLeft = startLeft;
+                let newTop = startTop;
                 
-                // Update width slider in real-time
-                updateWidthSlider();
+                switch (resizeType) {
+                    case 'top':
+                        newHeight = Math.max(150, startHeight - deltaY);
+                        newTop = startTop + (startHeight - newHeight);
+                        break;
+                    case 'right':
+                        newWidth = Math.max(200, startWidth + deltaX);
+                        break;
+                    case 'bottom':
+                        newHeight = Math.max(150, startHeight + deltaY);
+                        break;
+                    case 'left':
+                        newWidth = Math.max(200, startWidth - deltaX);
+                        newLeft = startLeft + (startWidth - newWidth);
+                        break;
+                    case 'top-left':
+                        newWidth = Math.max(200, startWidth - deltaX);
+                        newHeight = Math.max(150, startHeight - deltaY);
+                        newLeft = startLeft + (startWidth - newWidth);
+                        newTop = startTop + (startHeight - newHeight);
+                        break;
+                    case 'top-right':
+                        newWidth = Math.max(200, startWidth + deltaX);
+                        newHeight = Math.max(150, startHeight - deltaY);
+                        newTop = startTop + (startHeight - newHeight);
+                        break;
+                    case 'bottom-left':
+                        newWidth = Math.max(200, startWidth - deltaX);
+                        newHeight = Math.max(150, startHeight + deltaY);
+                        newLeft = startLeft + (startWidth - newWidth);
+                        break;
+                    case 'bottom-right':
+                        newWidth = Math.max(200, startWidth + deltaX);
+                        newHeight = Math.max(150, startHeight + deltaY);
+                        break;
+                }
+                
+                container.style.width = newWidth + 'px';
+                container.style.height = newHeight + 'px';
+                container.style.left = newLeft + 'px';
+                container.style.top = newTop + 'px';
             }
             
             function handleMouseUp() {
@@ -348,45 +381,6 @@ function setupResizeHandles() {
             document.addEventListener('mouseup', handleMouseUp);
         }
     });
-    
-    // Keyboard resize controls
-    container.addEventListener('keydown', (e) => {
-        if (container === document.activeElement) {
-            const step = e.shiftKey ? 10 : 1;
-            
-            switch(e.key) {
-                case 'ArrowUp':
-                    e.preventDefault();
-                    container.style.height = Math.max(150, container.offsetHeight - step) + 'px';
-                    break;
-                case 'ArrowDown':
-                    e.preventDefault();
-                    container.style.height = (container.offsetHeight + step) + 'px';
-                    break;
-                case 'ArrowLeft':
-                    e.preventDefault();
-                    container.style.width = Math.max(200, container.offsetWidth - step) + 'px';
-                    updateWidthSlider();
-                    break;
-                case 'ArrowRight':
-                    e.preventDefault();
-                    container.style.width = (container.offsetWidth + step) + 'px';
-                    updateWidthSlider();
-                    break;
-            }
-        }
-    });
-    
-    // Sync width slider with container size
-    widthSlider.addEventListener('input', (e) => {
-        const asciiWidth = parseInt(e.target.value);
-        const containerWidth = asciiWidthToContainerWidth(asciiWidth);
-        container.style.width = containerWidth + 'px';
-        widthValue.textContent = asciiWidth;
-    });
-    
-    // Initial sync
-    updateWidthSlider();
 }
 
 // ASCII Art Generation Functions (Client-side)

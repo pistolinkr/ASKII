@@ -33,15 +33,6 @@
                         </div>
                     </div>
 
-                    <div class="input-group">
-                        <label for="cameraWidth">Width: <span id="cameraWidthValue">60</span></label>
-                        <input type="range" id="cameraWidth" min="30" max="200" value="60">
-                    </div>
-
-                    <div class="input-group">
-                        <label for="cameraHeight">Height: <span id="cameraHeightValue">Auto</span></label>
-                        <input type="range" id="cameraHeight" min="20" max="150" value="60" disabled>
-                    </div>
 
                     <div class="input-group">
                         <label for="cameraFPS">FPS: <span id="cameraFPSValue">15</span></label>
@@ -88,7 +79,18 @@
                         <video id="cameraVideo" autoplay muted playsinline style="display: none;"></video>
                         <canvas id="cameraCanvas" style="display: none;"></canvas>
                         <pre id="cameraDisplay" class="ascii-display">Click "Start Camera" to begin ASCII video stream</pre>
-                        <div class="resize-handle"></div>
+                        
+                        <!-- Resize handles on all edges -->
+                        <div class="resize-handle resize-top"></div>
+                        <div class="resize-handle resize-right"></div>
+                        <div class="resize-handle resize-bottom"></div>
+                        <div class="resize-handle resize-left"></div>
+                        
+                        <!-- Corner handles -->
+                        <div class="resize-handle resize-top-left"></div>
+                        <div class="resize-handle resize-top-right"></div>
+                        <div class="resize-handle resize-bottom-left"></div>
+                        <div class="resize-handle resize-bottom-right"></div>
                     </div>
                 </div>
             </div>
