@@ -417,6 +417,17 @@ header h1 {
     transform: translateY(-2px);
 }
 
+.btn-warning {
+    background: #ff9500;
+    color: #ffffff;
+}
+
+.btn-warning:hover:not(:disabled) {
+    background: #e6850e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+}
+
 /* Display Panel */
 .display-panel {
     background: var(--ascii-bg);

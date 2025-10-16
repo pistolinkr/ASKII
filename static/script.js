@@ -81,8 +81,9 @@ async function startCamera() {
         isCameraRunning = true;
         statusDot.classList.add('active');
         statusText.textContent = 'Camera On';
-        document.getElementById('startCameraBtn').disabled = true;
-        document.getElementById('stopCameraBtn').disabled = false;
+        document.getElementById('toggleCameraBtn').textContent = 'Pause Camera';
+        document.getElementById('toggleCameraBtn').classList.remove('btn-primary');
+        document.getElementById('toggleCameraBtn').classList.add('btn-warning');
         document.getElementById('captureFrameBtn').disabled = false;
         
         // Start ASCII conversion loop
@@ -109,8 +110,9 @@ function stopCamera() {
     isCameraRunning = false;
     document.querySelector('.status-dot').classList.remove('active');
     document.querySelector('.status-text').textContent = 'Camera Off';
-    document.getElementById('startCameraBtn').disabled = false;
-    document.getElementById('stopCameraBtn').disabled = true;
+    document.getElementById('toggleCameraBtn').textContent = 'Resume Camera';
+    document.getElementById('toggleCameraBtn').classList.remove('btn-warning');
+    document.getElementById('toggleCameraBtn').classList.add('btn-primary');
     document.getElementById('captureFrameBtn').disabled = true;
     
     // Hide video and canvas
@@ -194,9 +196,17 @@ function captureFrame() {
     });
 }
 
+// Toggle Camera Function
+function toggleCamera() {
+    if (isCameraRunning) {
+        stopCamera();
+    } else {
+        startCamera();
+    }
+}
+
 // Camera Event Listeners
-document.getElementById('startCameraBtn').addEventListener('click', startCamera);
-document.getElementById('stopCameraBtn').addEventListener('click', stopCamera);
+document.getElementById('toggleCameraBtn').addEventListener('click', toggleCamera);
 document.getElementById('captureFrameBtn').addEventListener('click', captureFrame);
 
 // File upload
