@@ -133,6 +133,7 @@ function startASCIILoop() {
         const detailed = document.getElementById('detailedCameraChars').checked;
         const invert = document.getElementById('invertCameraColors').checked;
         const mirror = document.getElementById('mirrorCamera').checked;
+        const colorMode = document.getElementById('colorMode').value;
         
         // Set canvas size
         canvas.width = width;
@@ -145,6 +146,10 @@ function startASCIILoop() {
             ctx.translate(-canvas.width, 0);
         }
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Apply color filters
+        applyColorFilter(ctx, canvas.width, canvas.height, colorMode);
+        
         ctx.restore();
         
         // Get image data and convert to ASCII
@@ -184,6 +189,61 @@ function convertImageDataToASCII(imageData, width, detailed, invert) {
     }
     
     return asciiLines.join('\n');
+}
+
+function applyColorFilter(ctx, width, height, colorMode) {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    
+    for (let i = 0; i < data.length; i += 4) {
+        let r = data[i];
+        let g = data[i + 1];
+        let b = data[i + 2];
+        
+        switch (colorMode) {
+            case 'grayscale':
+                const gray = (r + g + b) / 3;
+                data[i] = gray;
+                data[i + 1] = gray;
+                data[i + 2] = gray;
+                break;
+                
+            case 'red':
+                data[i] = r;
+                data[i + 1] = r * 0.3;
+                data[i + 2] = r * 0.3;
+                break;
+                
+            case 'green':
+                data[i] = g * 0.3;
+                data[i + 1] = g;
+                data[i + 2] = g * 0.3;
+                break;
+                
+            case 'blue':
+                data[i] = b * 0.3;
+                data[i + 1] = b * 0.3;
+                data[i + 2] = b;
+                break;
+                
+            case 'sepia':
+                const sepiaR = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
+                const sepiaG = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
+                const sepiaB = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+                data[i] = sepiaR;
+                data[i + 1] = sepiaG;
+                data[i + 2] = sepiaB;
+                break;
+                
+            case 'negative':
+                data[i] = 255 - r;
+                data[i + 1] = 255 - g;
+                data[i + 2] = 255 - b;
+                break;
+        }
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
 }
 
 function captureFrame() {
