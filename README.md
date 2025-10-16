@@ -1,213 +1,204 @@
-# ASCII Art Studio
+# ASCII Art Studio 🎨
 
-A comprehensive Python tool for generating dynamic ASCII art and converting images/videos to ASCII art with both CLI and GUI interfaces.
+A comprehensive web-based ASCII art generation and conversion tool. Transform images into ASCII art, generate artistic patterns, and create 3D ASCII objects - all in your browser!
 
-## Features
+## 🌐 Live Demo
 
-### ASCII Art Generation
-- Multiple ASCII art types (banner, wave, circle, spiral, heart, box)
-- Animated ASCII art (wave and spiral animations)
-- Customizable parameters (size, width, characters)
-- Real-time preview and animation control
+**Visit the live site:** [ascii-lilac.vercel.app](https://ascii-lilac.vercel.app)
 
-### 3D ASCII Rendering
-- Real-time 3D objects rotating in 360°
-- Multiple shapes: Cube, Sphere, Donut (Torus), Pyramid
-- Full 3D transformations with lighting and depth
-- Adjustable rotation speed and detail level
-- Z-buffering for proper depth rendering
+## ✨ Features
 
-### Image & Video Conversion
-- Convert images to ASCII art
-- Convert videos to ASCII art with playback
-- Real-time webcam ASCII conversion
-- Adjustable width, detail level, and brightness
-- Save ASCII art to text files
-- Export to image formats (PNG, JPEG)
-- Export to video formats (MP4, AVI, MOV)
+### 🎯 Web Interface
 
-## Installation
+**Generate Art**
+- Text banners with ASCII styling
+- Geometric patterns (waves, circles, spirals, hearts)
+- Box text with decorative borders
+- Real-time preview with adjustable size
 
-Install required dependencies:
+**Image to ASCII**
+- Upload and convert images instantly
+- Adjustable width (30-200 characters)
+- Detailed/Simple character sets
+- Color inversion option
+- One-click copy to clipboard
 
+**3D Objects**
+- Render ASCII 3D shapes (cube, sphere, pyramid, torus)
+- Interactive size controls
+- Instant generation and preview
+
+### 💻 CLI Tools
+
+All features are also available as command-line tools for automation and scripting.
+
+## 🚀 Quick Start
+
+### Web Application
+
+1. Clone the repository:
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/pistolinkr/ASKII.git
+cd ASKII
 ```
 
-## GUI Application
-
-### Full-Featured GUI
-Launch the complete ASCII Art Studio with image/video conversion:
-
+2. Install dependencies:
 ```bash
-python3 ascii_art_gui_full.py
+pip3 install -r requirements.txt
 ```
 
-Features:
-- **Generate Art Tab**: Create patterns and animated ASCII art
-- **Image to ASCII Tab**: Convert images to ASCII with preview, export to PNG/JPEG
-- **Video to ASCII Tab**: Play videos as ASCII art in real-time, export to MP4/AVI/MOV
-- **3D Objects Tab**: Real-time 3D ASCII rendering with 360° rotation
-- **Theme Toggle**: Light/Dark/System theme support
-- Clean, minimal Apple-style design
-
-### Simple Generator GUI
-For just pattern generation:
-
+3. Run the web server:
 ```bash
-python3 ascii_art_gui.py
+python3 app.py
 ```
 
-## CLI Usage
-
-### Pattern Generation
-
-Generate static ASCII art patterns:
-
-```bash
-# Generate a text banner
-python3 ascii_art.py banner -t "Welcome!" -w 50 -c "#"
-
-# Generate a wave pattern
-python3 ascii_art.py wave -w 80 -s 10
-
-# Generate a circle
-python3 ascii_art.py circle -s 15 -c "O"
-
-# Generate a spiral pattern
-python3 ascii_art.py spiral -s 20
-
-# Generate a heart
-python3 ascii_art.py heart -s 12
-
-# Generate boxed text
-python3 ascii_art.py box -t "Hello World" -c "*"
+4. Open your browser and visit:
+```
+http://localhost:5000
 ```
 
-### Animated ASCII Art
+### CLI Usage
 
+**Generate ASCII Art:**
 ```bash
-# Animate a wave (10 seconds at 10 FPS)
-python3 ascii_art.py animate-wave -d 10 --fps 10
-
-# Animate a spiral (15 seconds at 15 FPS)
-python3 ascii_art.py animate-spiral -d 15 --fps 15
+python3 ascii_art.py banner -t "Hello World"
+python3 ascii_art.py wave -s 20
+python3 ascii_art.py heart -s 15
 ```
 
-## Options
-
-- `-t, --text`: Text to display (for text-based art)
-- `-w, --width`: Width of the art
-- `-s, --size`: Size of the art
-- `-c, --char`: Character to use for rendering
-- `-d, --duration`: Animation duration in seconds
-- `--fps`: Animation frames per second
-
-## Examples
-
+**Convert Image to ASCII:**
 ```bash
-# Large banner with custom character
-python3 ascii_art.py banner -t "ASCII Art!" -w 80 -c "="
-
-# Small circle
-python3 ascii_art.py circle -s 8 -c "@"
-
-# Fast wave animation
-python3 ascii_art.py animate-wave -d 5 --fps 20
+python3 ascii_converter.py image -i photo.jpg -w 100
+python3 ascii_converter.py image -i photo.jpg -w 150 -d --invert
 ```
+
+**Convert Video to ASCII:**
+```bash
+python3 ascii_converter.py video -i video.mp4 -w 80 --fps 15
+```
+
+**Webcam ASCII Art:**
+```bash
+python3 ascii_converter.py webcam --fps 15
+```
+
+**3D ASCII Objects:**
+```bash
+python3 ascii_3d.py cube -s 10
+python3 ascii_3d.py sphere -s 15
+python3 ascii_3d.py torus -s 12
+```
+
+## 🎨 Technology Stack
+
+- **Backend**: Flask (Python 3.9+)
+- **Frontend**: Vanilla JavaScript, CSS3, HTML5
+- **Image Processing**: OpenCV, Pillow, NumPy
+- **Deployment**: Vercel (Serverless)
+- **Design**: Apple-inspired minimal aesthetic
+
+## 📦 Dependencies
+
+- Flask 3.0.0
+- NumPy 2.0.2
+- OpenCV-Python 4.12.0.88
+- Pillow 11.3.0
+
+## 🛠️ Project Structure
+
+```
+ASKII/
+├── app.py                      # Flask web application
+├── ascii_art.py                # ASCII art generator
+├── ascii_converter.py          # Image/video converter
+├── ascii_3d.py                 # 3D object renderer
+├── ascii_exporter.py           # Export utilities
+├── templates/
+│   └── index.html              # Web interface
+├── static/
+│   ├── style.css               # Styles
+│   └── script.js               # Client-side logic
+├── requirements.txt            # Python dependencies
+├── vercel.json                 # Vercel deployment config
+└── README.md                   # This file
+```
+
+## 🌟 Features in Detail
+
+### Art Types
+
+- **Banner**: Large text with ASCII styling
+- **Wave**: Flowing wave patterns
+- **Circle**: Perfect ASCII circles
+- **Spiral**: Mesmerizing spiral patterns
+- **Heart**: ASCII heart shapes
+- **Box Text**: Text enclosed in decorative boxes
 
 ### Image Conversion
 
-Convert images to ASCII art:
+- Automatic aspect ratio preservation
+- Grayscale conversion
+- Customizable character density
+- Multiple detail levels
+- Brightness inversion
+
+### 3D Rendering
+
+- Wireframe 3D objects
+- Rotating animations
+- Multiple primitive shapes
+- Adjustable viewing angles
+
+## 📸 Screenshots
+
+The web interface features:
+- Clean, minimal Apple-inspired design
+- Dark ASCII display panels
+- Intuitive controls with sliders and radio buttons
+- Real-time conversion and preview
+- Responsive layout for mobile and desktop
+
+## 🚢 Deployment
+
+### Deploy to Vercel
+
+1. Fork this repository
+2. Sign up at [vercel.com](https://vercel.com)
+3. Import your GitHub repository
+4. Vercel will automatically detect the configuration
+5. Deploy!
+
+### Manual Deployment
+
+For other platforms, ensure Python 3.9+ is available and run:
 
 ```bash
-# Convert an image
-python3 ascii_converter.py image -i photo.jpg -w 100
-
-# Save to file
-python3 ascii_converter.py image -i photo.jpg -o output.txt -w 120
-
-# Use detailed characters
-python3 ascii_converter.py image -i photo.jpg -w 100 -d
-
-# Invert brightness
-python3 ascii_converter.py image -i photo.jpg -w 100 --invert
+pip3 install -r requirements.txt
+python3 app.py
 ```
 
-### Video Conversion
+The app will be available at `http://localhost:5000`
 
-Convert videos to ASCII art:
+## 🤝 Contributing
 
-```bash
-# Play video as ASCII in terminal
-python3 ascii_converter.py video -i video.mp4 -w 80 -f 15
+Contributions are welcome! Feel free to:
+- Report bugs
+- Suggest new features
+- Submit pull requests
 
-# Save video frames to file
-python3 ascii_converter.py video -i video.mp4 -o output.txt -w 80
+## 📄 License
 
-# Process first 100 frames only
-python3 ascii_converter.py video -i video.mp4 -w 80 --max-frames 100
-```
+MIT License - feel free to use and modify as needed.
 
-### Webcam
+## 👤 Author
 
-Convert webcam feed to ASCII in real-time:
+Created by [Pistol™](https://github.com/pistolinkr)
 
-```bash
-# Start webcam ASCII art
-python3 ascii_converter.py webcam -w 100 -f 15
-```
+## 🔗 Links
 
-### 3D Objects
+- **Live Site**: [ascii-lilac.vercel.app](https://ascii-lilac.vercel.app)
+- **GitHub**: [github.com/pistolinkr/ASKII](https://github.com/pistolinkr/ASKII)
 
-Render rotating 3D objects in real-time:
+---
 
-```bash
-# Rotating cube
-python3 ascii_3d.py cube -f 30 -s 1.0
-
-# Rotating sphere
-python3 ascii_3d.py sphere -f 30 -s 1.5
-
-# Rotating donut (torus)
-python3 ascii_3d.py torus -f 30 -s 1.0
-
-# Rotating pyramid
-python3 ascii_3d.py pyramid -f 30 -s 2.0
-
-# Run for 10 seconds with faster rotation
-python3 ascii_3d.py cube -d 10 -f 30 -s 2.0
-```
-
-Options:
-- `-d, --duration`: Animation duration in seconds (default: infinite)
-- `-f, --fps`: Frame rate (default: 30)
-- `-s, --speed`: Rotation speed multiplier (default: 1.0)
-
-## Files
-
-- `ascii_art.py` - CLI tool for pattern generation
-- `ascii_converter.py` - CLI tool for image/video conversion
-- `ascii_3d.py` - CLI tool for 3D object rendering
-- `ascii_exporter.py` - Export ASCII art to image/video formats
-- `ascii_art_gui.py` - Simple GUI for pattern generation
-- `ascii_art_gui_full.py` - Full-featured GUI with all features
-- `requirements.txt` - Python package dependencies
-
-## Export Features
-
-### Image Export
-Convert ASCII art to PNG or JPEG images with original aspect ratio:
-- Customizable font size and colors
-- Theme-aware color schemes (Light/Dark)
-- High-quality image output
-
-### Video Export
-Convert videos to ASCII art videos with original aspect ratio:
-- Support for MP4, AVI, MOV formats
-- Adjustable frame rate and quality
-- Progress indicator during conversion
-- Maintains video dimensions
-
-**Note**: Video export processes up to 300 frames by default for reasonable processing time. For longer videos, use the CLI tools.
-
+**Made with ASCII** ❤️
