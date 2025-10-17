@@ -147,15 +147,12 @@ function startASCIILoop() {
     const updateASCII = () => {
         if (!isCameraRunning) return;
         
-        // Calculate width from container size (approximate ASCII width)
-        const container = document.querySelector('.camera-container');
-        const containerWidth = container.offsetWidth;
-        const width = Math.max(30, Math.min(200, Math.floor(containerWidth / 8)));
+        const width = parseInt(document.getElementById('cameraWidth').value);
         const detailed = document.getElementById('detailedCameraChars').checked;
         const invert = document.getElementById('invertCameraColors').checked;
         const mirror = document.getElementById('mirrorCamera').checked;
         const colorMode = document.getElementById('colorMode').value;
-        const autoAspectRatio = true; // Always use auto aspect ratio
+        const autoAspectRatio = document.getElementById('customAspectRatio').checked;
         
         // Set canvas size
         canvas.width = width;
@@ -294,85 +291,52 @@ function toggleCamera() {
     }
 }
 
-// Pure drag-based resize functionality
+// Resize functionality with width synchronization
 function setupResizeHandles() {
     const container = document.querySelector('.camera-container');
+    const widthSlider = document.getElementById('cameraWidth');
+    const widthValue = document.getElementById('cameraWidthValue');
     
-    // Make container resizable with all edge and corner handles
+    // Convert container width to ASCII width (approximate)
+    function containerWidthToASCIIWidth(containerWidth) {
+        // ASCII characters are roughly 8-10px wide, so we estimate
+        const estimatedASCIIWidth = Math.floor(containerWidth / 8);
+        return Math.max(30, Math.min(200, estimatedASCIIWidth));
+    }
+    
+    // Convert ASCII width to container width
+    function asciiWidthToContainerWidth(asciiWidth) {
+        return Math.max(200, Math.min(1200, asciiWidth * 8));
+    }
+    
+    // Update width slider when container is resized
+    function updateWidthSlider() {
+        const asciiWidth = containerWidthToASCIIWidth(container.offsetWidth);
+        widthSlider.value = asciiWidth;
+        widthValue.textContent = asciiWidth;
+    }
+    
+    // Make container resizable
     container.addEventListener('mousedown', (e) => {
-        if (e.target.classList.contains('resize-handle')) {
+        if (e.target.classList.contains('resize-handle') || 
+            (e.target === container && e.offsetX > container.offsetWidth - 20 && e.offsetY > container.offsetHeight - 20)) {
+            
             e.preventDefault();
             
             const startX = e.clientX;
             const startY = e.clientY;
             const startWidth = container.offsetWidth;
             const startHeight = container.offsetHeight;
-            const startLeft = container.offsetLeft;
-            const startTop = container.offsetTop;
-            
-            const handle = e.target;
-            let resizeType = '';
-            
-            // Determine resize type based on handle class
-            if (handle.classList.contains('resize-top')) resizeType = 'top';
-            else if (handle.classList.contains('resize-right')) resizeType = 'right';
-            else if (handle.classList.contains('resize-bottom')) resizeType = 'bottom';
-            else if (handle.classList.contains('resize-left')) resizeType = 'left';
-            else if (handle.classList.contains('resize-top-left')) resizeType = 'top-left';
-            else if (handle.classList.contains('resize-top-right')) resizeType = 'top-right';
-            else if (handle.classList.contains('resize-bottom-left')) resizeType = 'bottom-left';
-            else if (handle.classList.contains('resize-bottom-right')) resizeType = 'bottom-right';
             
             function handleMouseMove(e) {
-                const deltaX = e.clientX - startX;
-                const deltaY = e.clientY - startY;
+                const newWidth = startWidth + (e.clientX - startX);
+                const newHeight = startHeight + (e.clientY - startY);
                 
-                let newWidth = startWidth;
-                let newHeight = startHeight;
-                let newLeft = startLeft;
-                let newTop = startTop;
+                container.style.width = Math.max(200, newWidth) + 'px';
+                container.style.height = Math.max(150, newHeight) + 'px';
                 
-                switch (resizeType) {
-                    case 'top':
-                        newHeight = Math.max(150, startHeight - deltaY);
-                        newTop = startTop + (startHeight - newHeight);
-                        break;
-                    case 'right':
-                        newWidth = Math.max(200, startWidth + deltaX);
-                        break;
-                    case 'bottom':
-                        newHeight = Math.max(150, startHeight + deltaY);
-                        break;
-                    case 'left':
-                        newWidth = Math.max(200, startWidth - deltaX);
-                        newLeft = startLeft + (startWidth - newWidth);
-                        break;
-                    case 'top-left':
-                        newWidth = Math.max(200, startWidth - deltaX);
-                        newHeight = Math.max(150, startHeight - deltaY);
-                        newLeft = startLeft + (startWidth - newWidth);
-                        newTop = startTop + (startHeight - newHeight);
-                        break;
-                    case 'top-right':
-                        newWidth = Math.max(200, startWidth + deltaX);
-                        newHeight = Math.max(150, startHeight - deltaY);
-                        newTop = startTop + (startHeight - newHeight);
-                        break;
-                    case 'bottom-left':
-                        newWidth = Math.max(200, startWidth - deltaX);
-                        newHeight = Math.max(150, startHeight + deltaY);
-                        newLeft = startLeft + (startWidth - newWidth);
-                        break;
-                    case 'bottom-right':
-                        newWidth = Math.max(200, startWidth + deltaX);
-                        newHeight = Math.max(150, startHeight + deltaY);
-                        break;
-                }
-                
-                container.style.width = newWidth + 'px';
-                container.style.height = newHeight + 'px';
-                container.style.left = newLeft + 'px';
-                container.style.top = newTop + 'px';
+                // Update width slider in real-time
+                updateWidthSlider();
             }
             
             function handleMouseUp() {
@@ -384,6 +348,45 @@ function setupResizeHandles() {
             document.addEventListener('mouseup', handleMouseUp);
         }
     });
+    
+    // Keyboard resize controls
+    container.addEventListener('keydown', (e) => {
+        if (container === document.activeElement) {
+            const step = e.shiftKey ? 10 : 1;
+            
+            switch(e.key) {
+                case 'ArrowUp':
+                    e.preventDefault();
+                    container.style.height = Math.max(150, container.offsetHeight - step) + 'px';
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    container.style.height = (container.offsetHeight + step) + 'px';
+                    break;
+                case 'ArrowLeft':
+                    e.preventDefault();
+                    container.style.width = Math.max(200, container.offsetWidth - step) + 'px';
+                    updateWidthSlider();
+                    break;
+                case 'ArrowRight':
+                    e.preventDefault();
+                    container.style.width = (container.offsetWidth + step) + 'px';
+                    updateWidthSlider();
+                    break;
+            }
+        }
+    });
+    
+    // Sync width slider with container size
+    widthSlider.addEventListener('input', (e) => {
+        const asciiWidth = parseInt(e.target.value);
+        const containerWidth = asciiWidthToContainerWidth(asciiWidth);
+        container.style.width = containerWidth + 'px';
+        widthValue.textContent = asciiWidth;
+    });
+    
+    // Initial sync
+    updateWidthSlider();
 }
 
 // ASCII Art Generation Functions (Client-side)
@@ -500,6 +503,52 @@ function generateSphere(size) {
     return sphere;
 }
 
+function generatePyramid(size) {
+    let pyramid = '';
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        const spaces = size - y - 1;
+        const stars = y * 2 + 1;
+        
+        for (let i = 0; i < spaces; i++) {
+            line += ' ';
+        }
+        for (let i = 0; i < stars; i++) {
+            line += '*';
+        }
+        pyramid += line + '\n';
+    }
+    return pyramid;
+}
+
+function generateTorus(size) {
+    let torus = '';
+    const R = size / 2;  // Major radius
+    const r = size / 4;  // Minor radius
+    const centerX = size / 2;
+    const centerY = size / 2;
+    
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        for (let x = 0; x < size * 2; x++) {
+            const dx = x / 2 - centerX;
+            const dy = y - centerY;
+            const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+            const distFromTorus = Math.abs(distFromCenter - R);
+            
+            if (distFromTorus < r) {
+                const intensity = Math.floor((1 - distFromTorus / r) * 4);
+                const chars = [' ', '.', ':', '*', '#'];
+                line += chars[Math.min(intensity, 4)];
+            } else {
+                line += ' ';
+            }
+        }
+        torus += line + '\n';
+    }
+    return torus;
+}
+
 // Initialize resize functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', setupResizeHandles);
 
@@ -525,7 +574,7 @@ document.getElementById('imageInput').addEventListener('change', (e) => {
 });
 
 // Convert Image
-document.getElementById('convertBtn').addEventListener('click', async () => {
+document.getElementById('convertBtn').addEventListener('click', () => {
     if (!selectedImage) return;
     
     const width = parseInt(document.getElementById('imageWidth').value);
@@ -539,29 +588,36 @@ document.getElementById('convertBtn').addEventListener('click', async () => {
     button.disabled = true;
     
     try {
-        const response = await fetch('/api/convert-image', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                image: selectedImage, 
-                width: width, 
-                detailed: detailed,
-                invert: invert
-            })
-        });
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size based on desired width
+            canvas.width = width;
+            canvas.height = Math.floor(width * img.height / img.width * 0.55);
+            
+            // Draw image to canvas
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Get image data and convert to ASCII
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const ascii = convertImageDataToASCII(imageData, canvas.width, detailed, invert);
+            
+            display.textContent = ascii;
+            button.classList.remove('loading');
+            button.disabled = false;
+        };
         
-        const data = await response.json();
+        img.onerror = () => {
+            display.textContent = 'Error loading image';
+            button.classList.remove('loading');
+            button.disabled = false;
+        };
         
-        if (data.success) {
-            display.textContent = data.ascii;
-        } else {
-            display.textContent = `Error: ${data.error}`;
-        }
+        img.src = selectedImage;
     } catch (error) {
         display.textContent = `Error: ${error.message}`;
-    } finally {
         button.classList.remove('loading');
         button.disabled = false;
     }
@@ -576,7 +632,7 @@ document.getElementById('copyImageBtn').addEventListener('click', () => {
 });
 
 // Generate 3D
-document.getElementById('generate3DBtn').addEventListener('click', async () => {
+document.getElementById('generate3DBtn').addEventListener('click', () => {
     const objType = document.querySelector('input[name="objType"]:checked').value;
     const size = parseInt(document.getElementById('objSize').value);
     
@@ -587,21 +643,24 @@ document.getElementById('generate3DBtn').addEventListener('click', async () => {
     button.disabled = true;
     
     try {
-        const response = await fetch('/api/generate-3d', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ type: objType, size: size })
-        });
+        let ascii = '';
         
-        const data = await response.json();
-        
-        if (data.success) {
-            display.textContent = data.ascii;
-        } else {
-            display.textContent = `Error: ${data.error}`;
+        switch(objType) {
+            case 'cube':
+                ascii = generateCube(size);
+                break;
+            case 'sphere':
+                ascii = generateSphere(size);
+                break;
+            case 'pyramid':
+                ascii = generatePyramid(size);
+                break;
+            case 'torus':
+                ascii = generateTorus(size);
+                break;
         }
+        
+        display.textContent = ascii;
     } catch (error) {
         display.textContent = `Error: ${error.message}`;
     } finally {

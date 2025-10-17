@@ -1,14 +1,57 @@
-// Theme detection and handling
+// Theme management
+let currentTheme = localStorage.getItem('theme') || 'auto';
+
 function updateTheme() {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    let themeToApply;
+    
+    if (currentTheme === 'auto') {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        themeToApply = prefersDark ? 'dark' : 'light';
+    } else {
+        themeToApply = currentTheme;
+    }
+    
+    document.documentElement.setAttribute('data-theme', themeToApply);
+    updateThemeIcon(themeToApply);
 }
 
-// Listen for theme changes
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
+function updateThemeIcon(theme) {
+    const themeIcon = document.querySelector('.theme-icon');
+    if (themeIcon) {
+        themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+}
+
+function toggleTheme() {
+    if (currentTheme === 'light') {
+        currentTheme = 'dark';
+    } else if (currentTheme === 'dark') {
+        currentTheme = 'auto';
+    } else {
+        currentTheme = 'light';
+    }
+    
+    localStorage.setItem('theme', currentTheme);
+    updateTheme();
+}
+
+// Listen for system theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (currentTheme === 'auto') {
+        updateTheme();
+    }
+});
 
 // Initialize theme on load
-document.addEventListener('DOMContentLoaded', updateTheme);
+document.addEventListener('DOMContentLoaded', () => {
+    updateTheme();
+    
+    // Add theme toggle event listener
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+});
 
 // Camera variables
 let cameraStream = null;
@@ -466,6 +509,52 @@ function generateSphere(size) {
     return sphere;
 }
 
+function generatePyramid(size) {
+    let pyramid = '';
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        const spaces = size - y - 1;
+        const stars = y * 2 + 1;
+        
+        for (let i = 0; i < spaces; i++) {
+            line += ' ';
+        }
+        for (let i = 0; i < stars; i++) {
+            line += '*';
+        }
+        pyramid += line + '\n';
+    }
+    return pyramid;
+}
+
+function generateTorus(size) {
+    let torus = '';
+    const R = size / 2;  // Major radius
+    const r = size / 4;  // Minor radius
+    const centerX = size / 2;
+    const centerY = size / 2;
+    
+    for (let y = 0; y < size; y++) {
+        let line = '';
+        for (let x = 0; x < size * 2; x++) {
+            const dx = x / 2 - centerX;
+            const dy = y - centerY;
+            const distFromCenter = Math.sqrt(dx * dx + dy * dy);
+            const distFromTorus = Math.abs(distFromCenter - R);
+            
+            if (distFromTorus < r) {
+                const intensity = Math.floor((1 - distFromTorus / r) * 4);
+                const chars = [' ', '.', ':', '*', '#'];
+                line += chars[Math.min(intensity, 4)];
+            } else {
+                line += ' ';
+            }
+        }
+        torus += line + '\n';
+    }
+    return torus;
+}
+
 // Initialize resize functionality when DOM is loaded
 document.addEventListener('DOMContentLoaded', setupResizeHandles);
 
@@ -491,7 +580,7 @@ document.getElementById('imageInput').addEventListener('change', (e) => {
 });
 
 // Convert Image
-document.getElementById('convertBtn').addEventListener('click', async () => {
+document.getElementById('convertBtn').addEventListener('click', () => {
     if (!selectedImage) return;
     
     const width = parseInt(document.getElementById('imageWidth').value);
@@ -505,29 +594,36 @@ document.getElementById('convertBtn').addEventListener('click', async () => {
     button.disabled = true;
     
     try {
-        const response = await fetch('/api/convert-image', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ 
-                image: selectedImage, 
-                width: width, 
-                detailed: detailed,
-                invert: invert
-            })
-        });
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size based on desired width
+            canvas.width = width;
+            canvas.height = Math.floor(width * img.height / img.width * 0.55);
+            
+            // Draw image to canvas
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            
+            // Get image data and convert to ASCII
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const ascii = convertImageDataToASCII(imageData, canvas.width, detailed, invert);
+            
+            display.textContent = ascii;
+            button.classList.remove('loading');
+            button.disabled = false;
+        };
         
-        const data = await response.json();
+        img.onerror = () => {
+            display.textContent = 'Error loading image';
+            button.classList.remove('loading');
+            button.disabled = false;
+        };
         
-        if (data.success) {
-            display.textContent = data.ascii;
-        } else {
-            display.textContent = `Error: ${data.error}`;
-        }
+        img.src = selectedImage;
     } catch (error) {
         display.textContent = `Error: ${error.message}`;
-    } finally {
         button.classList.remove('loading');
         button.disabled = false;
     }
@@ -542,7 +638,7 @@ document.getElementById('copyImageBtn').addEventListener('click', () => {
 });
 
 // Generate 3D
-document.getElementById('generate3DBtn').addEventListener('click', async () => {
+document.getElementById('generate3DBtn').addEventListener('click', () => {
     const objType = document.querySelector('input[name="objType"]:checked').value;
     const size = parseInt(document.getElementById('objSize').value);
     
@@ -553,21 +649,24 @@ document.getElementById('generate3DBtn').addEventListener('click', async () => {
     button.disabled = true;
     
     try {
-        const response = await fetch('/api/generate-3d', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ type: objType, size: size })
-        });
+        let ascii = '';
         
-        const data = await response.json();
-        
-        if (data.success) {
-            display.textContent = data.ascii;
-        } else {
-            display.textContent = `Error: ${data.error}`;
+        switch(objType) {
+            case 'cube':
+                ascii = generateCube(size);
+                break;
+            case 'sphere':
+                ascii = generateSphere(size);
+                break;
+            case 'pyramid':
+                ascii = generatePyramid(size);
+                break;
+            case 'torus':
+                ascii = generateTorus(size);
+                break;
         }
+        
+        display.textContent = ascii;
     } catch (error) {
         display.textContent = `Error: ${error.message}`;
     } finally {
