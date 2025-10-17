@@ -1,57 +1,14 @@
-// Theme management
-let currentTheme = localStorage.getItem('theme') || 'auto';
-
+// Theme detection and handling
 function updateTheme() {
-    let themeToApply;
-    
-    if (currentTheme === 'auto') {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        themeToApply = prefersDark ? 'dark' : 'light';
-    } else {
-        themeToApply = currentTheme;
-    }
-    
-    document.documentElement.setAttribute('data-theme', themeToApply);
-    updateThemeIcon(themeToApply);
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
 }
 
-function updateThemeIcon(theme) {
-    const themeIcon = document.querySelector('.theme-icon');
-    if (themeIcon) {
-        themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
-    }
-}
-
-function toggleTheme() {
-    if (currentTheme === 'light') {
-        currentTheme = 'dark';
-    } else if (currentTheme === 'dark') {
-        currentTheme = 'auto';
-    } else {
-        currentTheme = 'light';
-    }
-    
-    localStorage.setItem('theme', currentTheme);
-    updateTheme();
-}
-
-// Listen for system theme changes
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-    if (currentTheme === 'auto') {
-        updateTheme();
-    }
-});
+// Listen for theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateTheme);
 
 // Initialize theme on load
-document.addEventListener('DOMContentLoaded', () => {
-    updateTheme();
-    
-    // Add theme toggle event listener
-    const themeToggle = document.getElementById('themeToggle');
-    if (themeToggle) {
-        themeToggle.addEventListener('click', toggleTheme);
-    }
-});
+document.addEventListener('DOMContentLoaded', updateTheme);
 
 // Camera variables
 let cameraStream = null;
